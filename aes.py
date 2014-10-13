@@ -6,101 +6,101 @@
 # класс для шифрования и дешифрования AES
 # при создании экземпляра класса необходимо указать, какой ключ будет использован
 class aesCoder:
-	# конструктор класса
-	# дабы не морочиться с различной длинной ключей, будем рассматривать случай
-	# когда ключ 128 байт
-	def __init__(self, key):
-		if len(key) != 16:
-			raise Exception, 'Wrong key size, must be 16 bytes!'
-		self.Nk = 4 # число 32-х битных слов, составляющих шифроключ
-		self.Nb = 4 # число столбцов(32-х битных слов), составляющих State
-		self.Nr = 10 # число раундов, которое является функцией Nk и Nb
-		self.w = self.__keyExpansion( [ord(x) for x in key] )
-		
-	# получение ключей для всех раундов
-	def __keyExpansion(self, key):
-		# массив, который состоит из битов 32-х разрядного слова
-		# и является постоянным для данного раунда
-		Rcon = [
-				[0x00, 0x00, 0x00, 0x00],
-				[0x01, 0x00, 0x00, 0x00],
-        		[0x02, 0x00, 0x00, 0x00],
-        		[0x04, 0x00, 0x00, 0x00],
-        		[0x08, 0x00, 0x00, 0x00],
-        		[0x10, 0x00, 0x00, 0x00],
-        		[0x20, 0x00, 0x00, 0x00],
-        		[0x40, 0x00, 0x00, 0x00],
-        		[0x80, 0x00, 0x00, 0x00],
-        		[0x1b, 0x00, 0x00, 0x00],
-        		[0x36, 0x00, 0x00, 0x00]]
-				
-		w = [0] * (self.Nb * (self.Nr + 1)) # куда будут сохранены ключи
-		
-		for i in range(self.Nk):
-			w[i] = [key[4*i], key[4*i+1], key[4*i+2], key[4*i+3]]
-			i = i + 1
-		
-		for i in range(self.Nk, self.Nb * (self.Nr + 1)):
-			temp = w[i - 1]
-			if i % self.Nk == 0:
-				temp = self.__subWord(self.__rotWord(temp))
-				temp = [temp[j] ^ Rcon[i / self.Nk][j] for j in range(4)]
-			w[i] = [temp[j] ^ w[i - self.Nk][j] for j in range(4)]
-		return w
-		
-	# функция шифрования блока данных
-	# данные шифруются блоками по 128 бит (16 байт)
-	def __crypt(self, data128):
-		state = []
-		# сначала данные разбиваются на таблицу из 4-х строк и Nb столбцов
-		# причем заполнение идёт по столбцам
-		for i in range(4):
-			state.append(data128[i::self.Nb])
-		
-		state = self.__addRoundKey(state, self.w[0:self.Nb])
-		for round in range(1, self.Nr):
-			state = self.__subBytes(state)
-			state = self.__shiftRows(state)
-			state = self.__mixColumns(state)
-			state = self.__addRoundKey(state, self.w[round * self.Nb:(round+1) * self.Nb])
+    # конструктор класса
+    # дабы не морочиться с различной длинной ключей, будем рассматривать случай
+    # когда ключ 128 байт
+    def __init__(self, key):
+        if len(key) != 16:
+            raise Exception, 'Wrong key size, must be 16 bytes!'
+        self.Nk = 4 # число 32-х битных слов, составляющих шифроключ
+        self.Nb = 4 # число столбцов(32-х битных слов), составляющих State
+        self.Nr = 10 # число раундов, которое является функцией Nk и Nb
+        self.w = self.__keyExpansion( [ord(x) for x in key] )
+        
+    # получение ключей для всех раундов
+    def __keyExpansion(self, key):
+        # массив, который состоит из битов 32-х разрядного слова
+        # и является постоянным для данного раунда
+        Rcon = [
+                [0x00, 0x00, 0x00, 0x00],
+                [0x01, 0x00, 0x00, 0x00],
+                [0x02, 0x00, 0x00, 0x00],
+                [0x04, 0x00, 0x00, 0x00],
+                [0x08, 0x00, 0x00, 0x00],
+                [0x10, 0x00, 0x00, 0x00],
+                [0x20, 0x00, 0x00, 0x00],
+                [0x40, 0x00, 0x00, 0x00],
+                [0x80, 0x00, 0x00, 0x00],
+                [0x1b, 0x00, 0x00, 0x00],
+                [0x36, 0x00, 0x00, 0x00]]
+                
+        w = [0] * (self.Nb * (self.Nr + 1)) # куда будут сохранены ключи
+        
+        for i in range(self.Nk):
+            w[i] = [key[4*i], key[4*i+1], key[4*i+2], key[4*i+3]]
+            i = i + 1
+        
+        for i in range(self.Nk, self.Nb * (self.Nr + 1)):
+            temp = w[i - 1]
+            if i % self.Nk == 0:
+                temp = self.__subWord(self.__rotWord(temp))
+                temp = [temp[j] ^ Rcon[i / self.Nk][j] for j in range(4)]
+            w[i] = [temp[j] ^ w[i - self.Nk][j] for j in range(4)]
+        return w
+        
+    # функция шифрования блока данных
+    # данные шифруются блоками по 128 бит (16 байт)
+    def __crypt(self, data128):
+        state = []
+        # сначала данные разбиваются на таблицу из 4-х строк и Nb столбцов
+        # причем заполнение идёт по столбцам
+        for i in range(4):
+            state.append(data128[i::self.Nb])
+        
+        state = self.__addRoundKey(state, self.w[0:self.Nb])
+        for round in range(1, self.Nr):
+            state = self.__subBytes(state)
+            state = self.__shiftRows(state)
+            state = self.__mixColumns(state)
+            state = self.__addRoundKey(state, self.w[round * self.Nb:(round+1) * self.Nb])
 
-		state = self.__subBytes(state)
-		state = self.__shiftRows(state)
-		state = self.__addRoundKey(state, self.w[self.Nr * self.Nb:(self.Nr + 1) * self.Nb])
+        state = self.__subBytes(state)
+        state = self.__shiftRows(state)
+        state = self.__addRoundKey(state, self.w[self.Nr * self.Nb:(self.Nr + 1) * self.Nb])
 
-		# собираем state в список
-		result = []
-		for i in range(self.Nb):
-			for j in range(4):
-				result.append(state[j][i])
-		return result
-		
-	def __decrypt(self, data128):
-		state = []
-		for i in range(4):
-			state.append(data128[i::self.Nb])
-			
-		state = self.__addRoundKey(state, self.w[self.Nr * self.Nb:(self.Nr + 1) * self.Nb])
-		for round in range(self.Nr - 1, 0, -1):
-			state = self.__invShiftRows(state)
-			state = self.__invSubBytes(state)
-			state = self.__addRoundKey(state, self.w[self.Nb * round:self.Nb * (round+1)])
-			state = self.__invMixColumns(state)
+        # собираем state в список
+        result = []
+        for i in range(self.Nb):
+            for j in range(4):
+                result.append(state[j][i])
+        return result
+        
+    def __decrypt(self, data128):
+        state = []
+        for i in range(4):
+            state.append(data128[i::self.Nb])
+            
+        state = self.__addRoundKey(state, self.w[self.Nr * self.Nb:(self.Nr + 1) * self.Nb])
+        for round in range(self.Nr - 1, 0, -1):
+            state = self.__invShiftRows(state)
+            state = self.__invSubBytes(state)
+            state = self.__addRoundKey(state, self.w[self.Nb * round:self.Nb * (round+1)])
+            state = self.__invMixColumns(state)
 
-		state = self.__invShiftRows(state)
-		state = self.__invSubBytes(state)
-		state = self.__addRoundKey(state, self.w[0: self.Nb])
-		
-		# собираем state в список
-		result = []
-		for i in range(self.Nb):
-			for j in range(4):
-				result.append(state[j][i])
-		return result
-		
-	# прогонка одного байта через блок нелинейной замены
-	def __sub1Byte(self, byte):
-		Sbox = [0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 
+        state = self.__invShiftRows(state)
+        state = self.__invSubBytes(state)
+        state = self.__addRoundKey(state, self.w[0: self.Nb])
+        
+        # собираем state в список
+        result = []
+        for i in range(self.Nb):
+            for j in range(4):
+                result.append(state[j][i])
+        return result
+        
+    # прогонка одного байта через блок нелинейной замены
+    def __sub1Byte(self, byte):
+        Sbox = [0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 
         0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 
         0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15, 
         0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75, 
@@ -116,11 +116,11 @@ class aesCoder:
         0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e, 
         0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf, 
         0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16]
-		return Sbox[byte]
-	
-	# прогонка одного байта через блок обратной нелинейной замены
-	def __invSub1Byte(self, byte):	
-		InvSbox = [0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
+        return Sbox[byte]
+    
+    # прогонка одного байта через блок обратной нелинейной замены
+    def __invSub1Byte(self, byte):    
+        InvSbox = [0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
         0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
         0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
         0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25,
@@ -136,151 +136,151 @@ class aesCoder:
         0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
         0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
         0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d]
-		return InvSbox[byte]
-	
-	# трансформации при шифровании, которые обрабатывают State, используя
-	# нелинейную таблицу замещения байтов(S-box), применяя её независимо к каждому байту State		
-	def __subBytes(self, state):
-		for i in range(4):
-			for j in range(self.Nb):
-				state[i][j] = self.__sub1Byte(state[i][j])
-		return state
-		
-	def __invSubBytes(self, state):
-		for i in range(4):
-			for j in range(self.Nb):
-				state[i][j] = self.__invSub1Byte(state[i][j])
-		return state
+        return InvSbox[byte]
+    
+    # трансформации при шифровании, которые обрабатывают State, используя
+    # нелинейную таблицу замещения байтов(S-box), применяя её независимо к каждому байту State        
+    def __subBytes(self, state):
+        for i in range(4):
+            for j in range(self.Nb):
+                state[i][j] = self.__sub1Byte(state[i][j])
+        return state
+        
+    def __invSubBytes(self, state):
+        for i in range(4):
+            for j in range(self.Nb):
+                state[i][j] = self.__invSub1Byte(state[i][j])
+        return state
 
-	# функция, использующаяся в процедуре Key Expansion, 
-	# которая берет 4-х байтное слово и производит над ним циклическую перестановку
-	def __rotWord(self, word):
-		return word[1:] + word[:1]
-		
-	# функция, используемая в процедуре Key Expansion, которая берет на входе
-	# четырёхбайтное слово и, применяя S-box к каждому из четырёх байтов, выдаёт выходное слово
-	def __subWord(self, word4):
-		return [self.__sub1Byte(x) for x in word4]
-		
-	# трансформация при шифровании и обратном шифровании, при которой Round Key XOR’ится c State.
-	def __addRoundKey(self, state, roundKey):
-		for i in range(4):
-			for j in range(self.Nb):
-				state[i][j] ^= roundKey[i][j]
-		return state
-	
-	# трансформации при шифровании, которые обрабатывают State, 
-	# циклически смещая последние три строки State на разные величины
-	def __shiftRows(self, state):
-		for i in range(4):
-			state[i] = state[i][i:] + state[i][0:i]
-		return state
-		
-	def __invShiftRows(self, state):
-		for i in range(4):
-			state[i] = state[i][-i:] + state[i][:-i]
-		return state
-		
-	
-	# В процедуре __mixColumns, четыре байта каждой колонки State смешиваются, 
-	# используя для этого обратимую линейную трансформацию.
-	# __mixColumns обрабатывает состояния по колонкам, трактуя каждую из них
-	# как полином четвёртой степени. Над этими полиномами производится умножение в
-	# поле Галуа. В общем, матан.
-	# __gmul - умножение двух чисел в поле Галуа
-	def __gmul(self, a, b):
-		p = 0
-		for counter in range(8):
-			if b & 1:
-				p ^= a
-			hi_bit_set = a & 0x80
-			a <<= 1
-			a &= 0xff
-			if hi_bit_set:
-				a ^= 0x1b
-			b >>= 1
-		return p
+    # функция, использующаяся в процедуре Key Expansion, 
+    # которая берет 4-х байтное слово и производит над ним циклическую перестановку
+    def __rotWord(self, word):
+        return word[1:] + word[:1]
+        
+    # функция, используемая в процедуре Key Expansion, которая берет на входе
+    # четырёхбайтное слово и, применяя S-box к каждому из четырёх байтов, выдаёт выходное слово
+    def __subWord(self, word4):
+        return [self.__sub1Byte(x) for x in word4]
+        
+    # трансформация при шифровании и обратном шифровании, при которой Round Key XOR’ится c State.
+    def __addRoundKey(self, state, roundKey):
+        for i in range(4):
+            for j in range(self.Nb):
+                state[i][j] ^= roundKey[i][j]
+        return state
+    
+    # трансформации при шифровании, которые обрабатывают State, 
+    # циклически смещая последние три строки State на разные величины
+    def __shiftRows(self, state):
+        for i in range(4):
+            state[i] = state[i][i:] + state[i][0:i]
+        return state
+        
+    def __invShiftRows(self, state):
+        for i in range(4):
+            state[i] = state[i][-i:] + state[i][:-i]
+        return state
+        
+    
+    # В процедуре __mixColumns, четыре байта каждой колонки State смешиваются, 
+    # используя для этого обратимую линейную трансформацию.
+    # __mixColumns обрабатывает состояния по колонкам, трактуя каждую из них
+    # как полином четвёртой степени. Над этими полиномами производится умножение в
+    # поле Галуа. В общем, матан.
+    # __gmul - умножение двух чисел в поле Галуа
+    def __gmul(self, a, b):
+        p = 0
+        for counter in range(8):
+            if b & 1:
+                p ^= a
+            hi_bit_set = a & 0x80
+            a <<= 1
+            a &= 0xff
+            if hi_bit_set:
+                a ^= 0x1b
+            b >>= 1
+        return p
 
-	def __mixColumns(self, state):
-		for i in range(self.Nb): # для всех столбцов таблицы
-			b = [0] * 4
-			b[0] = self.__gmul(state[i][0], 2) ^ self.__gmul(state[i][1], 3) ^ self.__gmul(state[i][2], 1) ^ self.__gmul(state[i][3], 1)
-			b[1] = self.__gmul(state[i][0], 1) ^ self.__gmul(state[i][1], 2) ^ self.__gmul(state[i][2], 3) ^ self.__gmul(state[i][3], 1)
-			b[2] = self.__gmul(state[i][0], 1) ^ self.__gmul(state[i][1], 1) ^ self.__gmul(state[i][2], 2) ^ self.__gmul(state[i][3], 3)
-			b[3] = self.__gmul(state[i][0], 3) ^ self.__gmul(state[i][1], 1) ^ self.__gmul(state[i][2], 1) ^ self.__gmul(state[i][3], 2)
-			for j in range(4):
-				state[i][j] = b[j]
-		return state
-			
-	def __invMixColumns(self, state):				
-		for i in range(self.Nb):
-			b = [0] * 4
-			b[0] = self.__gmul(state[i][0], 14) ^ self.__gmul(state[i][1], 11) ^ self.__gmul(state[i][2], 13) ^ self.__gmul(state[i][3], 9)
-			b[1] = self.__gmul(state[i][0], 9) ^ self.__gmul(state[i][1], 14) ^ self.__gmul(state[i][2], 11) ^ self.__gmul(state[i][3], 13)
-			b[2] = self.__gmul(state[i][0], 13) ^ self.__gmul(state[i][1], 9) ^ self.__gmul(state[i][2], 14) ^ self.__gmul(state[i][3], 11)
-			b[3] = self.__gmul(state[i][0], 11) ^ self.__gmul(state[i][1], 13) ^ self.__gmul(state[i][2], 9) ^ self.__gmul(state[i][3], 14)
-			for j in range(4):
-				state[i][j] = b[j]
-		return state
-		
-	
-	# шифрование input
-	# на выходе - зашифрованные данные (список байт) и количество нулевых байт,
-	# вставленных для выравнивания длинны (кратной 16 байтам (128 битам))
-	def cryptList(self, input):
-		# первым делом переведём символы (байты) в int
-		input = [ord(x) for x in input]
-		
-		output = []
-		for i in range (len(input) / 16):
-			output += self.__crypt(input[i * 16 : (i + 1) * 16])
-			
-		lastLen = len(input) % 16
-		nZeroes = 16 - lastLen
-		lastPart = input[-lastLen::] + [0] * nZeroes
-		output += self.__crypt(lastPart)
-		output = [chr(x) for x in output]
-		return output, nZeroes
-		
-	# дешифрование input
-	def decryptList(self, nZeroes, input):
-		input = [ord(x) for x in input]
-		
-		output = []
-		for i in range (len(input) / 16):
-			output += self.__decrypt(input[i * 16 : (i + 1) * 16])
-		
-		output = output[:-nZeroes] # избавимся от фиктивных нулей в конце
-		output = [chr(x) for x in output]
-		return output
+    def __mixColumns(self, state):
+        for i in range(self.Nb): # для всех столбцов таблицы
+            b = [0] * 4
+            b[0] = self.__gmul(state[i][0], 2) ^ self.__gmul(state[i][1], 3) ^ self.__gmul(state[i][2], 1) ^ self.__gmul(state[i][3], 1)
+            b[1] = self.__gmul(state[i][0], 1) ^ self.__gmul(state[i][1], 2) ^ self.__gmul(state[i][2], 3) ^ self.__gmul(state[i][3], 1)
+            b[2] = self.__gmul(state[i][0], 1) ^ self.__gmul(state[i][1], 1) ^ self.__gmul(state[i][2], 2) ^ self.__gmul(state[i][3], 3)
+            b[3] = self.__gmul(state[i][0], 3) ^ self.__gmul(state[i][1], 1) ^ self.__gmul(state[i][2], 1) ^ self.__gmul(state[i][3], 2)
+            for j in range(4):
+                state[i][j] = b[j]
+        return state
+            
+    def __invMixColumns(self, state):                
+        for i in range(self.Nb):
+            b = [0] * 4
+            b[0] = self.__gmul(state[i][0], 14) ^ self.__gmul(state[i][1], 11) ^ self.__gmul(state[i][2], 13) ^ self.__gmul(state[i][3], 9)
+            b[1] = self.__gmul(state[i][0], 9) ^ self.__gmul(state[i][1], 14) ^ self.__gmul(state[i][2], 11) ^ self.__gmul(state[i][3], 13)
+            b[2] = self.__gmul(state[i][0], 13) ^ self.__gmul(state[i][1], 9) ^ self.__gmul(state[i][2], 14) ^ self.__gmul(state[i][3], 11)
+            b[3] = self.__gmul(state[i][0], 11) ^ self.__gmul(state[i][1], 13) ^ self.__gmul(state[i][2], 9) ^ self.__gmul(state[i][3], 14)
+            for j in range(4):
+                state[i][j] = b[j]
+        return state
+        
+    
+    # шифрование input
+    # на выходе - зашифрованные данные (список байт) и количество нулевых байт,
+    # вставленных для выравнивания длинны (кратной 16 байтам (128 битам))
+    def cryptList(self, input):
+        # первым делом переведём символы (байты) в int
+        input = [ord(x) for x in input]
+        
+        output = []
+        for i in range (len(input) / 16):
+            output += self.__crypt(input[i * 16 : (i + 1) * 16])
+            
+        lastLen = len(input) % 16
+        nZeroes = 16 - lastLen
+        lastPart = input[-lastLen::] + [0] * nZeroes
+        output += self.__crypt(lastPart)
+        output = [chr(x) for x in output]
+        return output, nZeroes
+        
+    # дешифрование input
+    def decryptList(self, nZeroes, input):
+        input = [ord(x) for x in input]
+        
+        output = []
+        for i in range (len(input) / 16):
+            output += self.__decrypt(input[i * 16 : (i + 1) * 16])
+        
+        output = output[:-nZeroes] # избавимся от фиктивных нулей в конце
+        output = [chr(x) for x in output]
+        return output
 
 def getArgs():
-	import argparse
-	parser = argparse.ArgumentParser(prog = "aes", description="2nd lab for cryptographic methods of information security. AES.")
-	parser.add_argument ('inFile', type = argparse.FileType(mode='rb'), help = "input file")
-	parser.add_argument ('keyFile', type = argparse.FileType(mode='rb'), help = "file with key")
-	parser.add_argument ('outFile', type = argparse.FileType(mode='wb'), help = "output file")
-	parser.add_argument ('cryptOrDecrypt', choices=['c', 'd'], help = "crypt or decrypt")
- 	return parser.parse_args()
-	
-def main():	
-	args = getArgs()
-	
-	#пытаемся создать шифратор с данным ключом
-	try:
-		coder = aesCoder(list(args.keyFile.read()))
-	except Exception as err:
-		print("Error: {0}".format(err))
-		return -1
-		
-	if (args.cryptOrDecrypt == 'c'):
-		# шифрование. На выходе - количество фиктивных нулей в конце и сами зашифрованные данные
-		crypted, nZeroes = coder.cryptList(list(args.inFile.read()))
-		# в файл сначала запишем количество фиктивных нулей, потом зашифрованные данные
-		args.outFile.write(chr(nZeroes) + ''.join(crypted))
-	else:
-		decrypted = coder.decryptList(ord(args.inFile.read(1)), list(args.inFile.read()))
-		args.outFile.write(''.join(decrypted))
+    import argparse
+    parser = argparse.ArgumentParser(prog = "aes", description="2nd lab for cryptographic methods of information security. AES.")
+    parser.add_argument ('inFile', type = argparse.FileType(mode='rb'), help = "input file")
+    parser.add_argument ('keyFile', type = argparse.FileType(mode='rb'), help = "file with key")
+    parser.add_argument ('outFile', type = argparse.FileType(mode='wb'), help = "output file")
+    parser.add_argument ('cryptOrDecrypt', choices=['c', 'd'], help = "crypt or decrypt")
+    return parser.parse_args()
+    
+def main():    
+    args = getArgs()
+    
+    #пытаемся создать шифратор с данным ключом
+    try:
+        coder = aesCoder(list(args.keyFile.read()))
+    except Exception as err:
+        print("Error: {0}".format(err))
+        return -1
+        
+    if (args.cryptOrDecrypt == 'c'):
+        # шифрование. На выходе - количество фиктивных нулей в конце и сами зашифрованные данные
+        crypted, nZeroes = coder.cryptList(list(args.inFile.read()))
+        # в файл сначала запишем количество фиктивных нулей, потом зашифрованные данные
+        args.outFile.write(chr(nZeroes) + ''.join(crypted))
+    else:
+        decrypted = coder.decryptList(ord(args.inFile.read(1)), list(args.inFile.read()))
+        args.outFile.write(''.join(decrypted))
 
 if __name__ == "__main__":
-	main()
+    main()
