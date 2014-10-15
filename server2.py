@@ -23,7 +23,7 @@ def getArgs():
     parser.add_argument ('keyVizh', type = argparse.FileType(mode='rb'), help = "file with key for Vizhiner cipher")
     parser.add_argument ('keyAES', type = argparse.FileType(mode='rb'), help = "file with key for AES cipher")
     parser.add_argument ('outFile', type = argparse.FileType(mode='wb'), help = "output file")
-     return parser.parse_args()
+    return parser.parse_args()
     
     
 def main():    
