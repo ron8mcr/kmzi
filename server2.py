@@ -33,7 +33,7 @@ def main():
         fromImage = steg.extractingFromImage(args.imgFile)
         coderAES = aes.aesCoder(list(args.keyAES.read()))
         decryptedAES = coderAES.decryptList(ord(fromImage[0]), fromImage[1:])
-        res = vizh.vizh(decryptedAES, list(args.keyVizh.read()), vizh.d)
+        res = vizh.vizh(decryptedAES, list(args.keyVizh.read()), vizh.decrypt)
         args.outFile.write(''.join(res))    
     except Exception as err:
         print ("Error: {0}".format(err))

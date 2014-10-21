@@ -19,7 +19,7 @@ import os
 
 def prepareIMG(text, keyVizh, keyAES, imgContFName):
     """шифрование текста и сокрытие его в картинке"""
-    textV = vizh.vizh(text, keyVizh, vizh.c)
+    textV = vizh.vizh(text, keyVizh, vizh.crypt)
     coderAES = aes.aesCoder(keyAES)
     crypted, nZeroes = coderAES.cryptList(textV)
     toHide = [chr(nZeroes)] + crypted

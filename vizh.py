@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 # КМЗИ. ЛР№1. Шифр Вижинера
+import sys
 def getArgs():
     import argparse
 
@@ -14,24 +15,26 @@ def getArgs():
     return parser.parse_args()
 
 
-def c(i, k):
+def crypt(i, k):
     return i + k
 
 
-def d(i, k):
+def decrypt(i, k):
     return i - k
 
 
-def vizh(inputList, keyList, func):
-    if len(keyList) == 0:
+def vizh(inputList, key, func):
+    keylen = len(key)
+    if keylen == 0:
         raise Exception, 'Vizhiner key is empty'
-    return [chr(func(ord(item[1]), ord(keyList[item[0] % len(keyList)])) % 256) for item in list(enumerate(inputList))]
+    return [chr(func(ord(s), ord(key[i % keylen])) % 256) for i, s in enumerate(inputList)]
 
 
 def main():
     args = getArgs()
+    funcs = {'c': crypt, 'd': decrypt}
     try:
-        res = vizh(list(args.inFile.read()), list(args.keyFile.read()), eval(args.cryptOrDecrypt))
+        res = vizh(args.inFile.read(), args.keyFile.read(), funcs[args.cryptOrDecrypt])
     except Exception as err:
         print("Error: {0}".format(err))
         return
