@@ -2,7 +2,6 @@
 # -*- coding: UTF-8 -*-
 
 # КМЗИ. ЛР№1. Шифр Вижинера
-import sys
 def getArgs():
     import argparse
 
