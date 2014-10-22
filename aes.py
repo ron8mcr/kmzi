@@ -260,12 +260,12 @@ class aesCoder:
         nZeroes = 16 - lastLen
         lastPart = input[-lastLen::] + [0] * nZeroes
         output += self.__crypt(lastPart)
-        output = [chr(x) for x in output]
-        return output, nZeroes
+        return [chr(nZeroes)] + [chr(x) for x in output]
 
 
-    def decryptList(self, nZeroes, input):
-        input = [ord(x) for x in input]
+    def decryptList(self, input):
+        nZeroes = ord(input[0])
+        input = [ord(x) for x in input[1:]]
 
         output = []
         for i in range(len(input) / 16):
@@ -293,19 +293,14 @@ def main():
 
     # пытаемся создать шифратор с данным ключом
     try:
-        coder = aesCoder(list(args.keyFile.read()))
+        coder = aesCoder(args.keyFile.read())
     except Exception as err:
         print("Error: {0}".format(err))
         return -1
 
-    if (args.cryptOrDecrypt == 'c'):
-        # шифрование. На выходе - количество фиктивных нулей в конце и сами зашифрованные данные
-        crypted, nZeroes = coder.cryptList(list(args.inFile.read()))
-        # в файл сначала запишем количество фиктивных нулей, потом зашифрованные данные
-        args.outFile.write(chr(nZeroes) + ''.join(crypted))
-    else:
-        decrypted = coder.decryptList(ord(args.inFile.read(1)), list(args.inFile.read()))
-        args.outFile.write(''.join(decrypted))
+    funcs = {'c': coder.cryptList, 'd':coder.decryptList}
+    res = funcs[args.cryptOrDecrypt](args.inFile.read())
+    args.outFile.write(''.join(res))
 
 
 if __name__ == "__main__":

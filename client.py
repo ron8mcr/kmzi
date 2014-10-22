@@ -21,9 +21,8 @@ def prepareIMG(text, keyVizh, keyAES, imgContFName):
     """шифрование текста и сокрытие его в картинке"""
     textV = vizh.vizh(text, keyVizh, vizh.crypt)
     coderAES = aes.aesCoder(keyAES)
-    crypted, nZeroes = coderAES.cryptList(textV)
-    toHide = [chr(nZeroes)] + crypted
-    outImg = steg.hidingToImage(imgContFName, toHide)
+    crypted = coderAES.cryptList(textV)
+    outImg = steg.hidingToImage(imgContFName, crypted)
     return outImg
 
 
@@ -57,7 +56,7 @@ def main():
 
     # подготавливем данные для отправки
     try:
-        img = prepareIMG(list(args.infFile.read()), list(args.keyVizh.read()), list(args.keyAES.read()), args.imageFile)
+        img = prepareIMG(args.infFile.read(), args.keyVizh.read(), args.keyAES.read(), args.imageFile)
     except Exception as err:
         print "Can't create image with hidden and ciphered file"
         print("Error: {0}".format(err))
