@@ -17,13 +17,11 @@ import socket
 import os
 
 
-def prepareIMG(text, keyVizh, keyAES, imgContFName):
+def prepareIMG(text, keyVizh, keyAES, imgContFName, resImgFName):
     """шифрование текста и сокрытие его в картинке"""
     textV = vizh.vizh(text, keyVizh, vizh.crypt)
-    coderAES = aes.aesCoder(keyAES)
-    crypted = coderAES.cryptList(textV)
-    outImg = steg.hidingToImage(imgContFName, crypted)
-    return outImg
+    crypted = aes.aesCoder(keyAES).cryptList(textV)
+    steg.hidingToImage(imgContFName, crypted, resImgFName)
 
 
 def sendData(data, host, port):
@@ -53,18 +51,15 @@ def getArgs():
 
 def main():
     args = getArgs()
-
+    fName = '__' + args.imageFile + '.bmp'
     # подготавливем данные для отправки
     try:
-        img = prepareIMG(args.infFile.read(), args.keyVizh.read(), args.keyAES.read(), args.imageFile)
+        prepareIMG(args.infFile.read(), args.keyVizh.read(), args.keyAES.read(), args.imageFile, fName)
     except Exception as err:
         print "Can't create image with hidden and ciphered file"
         print("Error: {0}".format(err))
         return
 
-    fName = '__' + args.imageFile + '.bmp'
-    img.save(fName, "BMP")
-    #img.close()
     dataFile = open(fName, 'rb')
     data = dataFile.read()
     dataFile.close()

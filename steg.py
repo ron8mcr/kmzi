@@ -16,7 +16,7 @@ def setLSB(num, bit):
     return num
 
 
-def hidingToImage(containerFName, inf):
+def hidingToImage(containerFName, inf, outFName):
     # пытаемся открыть изображение-контейнер
     # если не удастся - будет брошено исключение
     contImg = Image.open(containerFName)
@@ -44,8 +44,9 @@ def hidingToImage(containerFName, inf):
 
     # создаем новое изображение на основе изменённых байт
     outImg = Image.frombytes(contImg.mode, contImg.size, ''.join(raw))
-    # contImg.close()
-    return outImg
+    
+    # сохраняем обязательно в .bmp, т.к. иначе будет сжатие
+    outImg.save(outFName, "BMP")
 
 
 def extractingFromImage(container):
@@ -171,7 +172,7 @@ def getArgs():
 
     parser = argparse.ArgumentParser(prog="steg",
                                      description="3rd lab for cryptographic methods of information security. Steganoraphy to images and music.")
-    parser.add_argument('type', choices=['w', 'i'], help="Wav or Image")
+    parser.add_argument('type', choices=['wav', 'img'], help="Wav or Image")
     parser.add_argument('input_file', help="image or wav container ")
     parser.add_argument('output_file', help="output file (wav/BMP or hidden file)")
     parser.add_argument('file_for_hiding', nargs='?', type=argparse.FileType(mode='rb'), help="file for hiding")
@@ -180,56 +181,31 @@ def getArgs():
 
 def main():
     args = getArgs()
+    
+    funcs = {'hiding': {'img': hidingToImage, 'wav': hidingToWav},
+            'extracting': {'img':extractingFromImage, 'wav':extractingFromWav}}
 
-    if args.type == 'i':  # стеганография в изображения
-        if args.file_for_hiding:  # сокрытие файла
-            try:
-                # считываем содержимое ифнормационного файла
-                inf = list(args.file_for_hiding.read())
-                args.file_for_hiding.close()
+    if args.file_for_hiding:  # сокрытие файла
+        inf = args.file_for_hiding.read()
+        func = funcs['hiding'][args.type]
+        try:
+            func(args.input_file, inf, args.output_file)
+        except Exception as err:
+            print("Error: {0}".format(err))
+            return -1
 
-                outImg = hidingToImage(args.input_file, inf)
-            except Exception as err:
-                print("Error: {0}".format(err))
-                return -1
-            # сохраняем обязательно в .bmp, т.к. иначе будет сжатие
-            outImg.save(args.output_file, "BMP")
+    else:  # извлечение информации
+        func = funcs['extracting'][args.type]
+        try:
+            fileContent = func(args.input_file)
+        except Exception as err:
+            print("Error: {0}".format(err))
+            return -1
 
-        else:  # извлечение информации из изображения
-            try:
-                fileContent = extractingFromImage(args.input_file)
-            except Exception as err:
-                print("Error: {0}".format(err))
-                return -1
+        resfile = open(args.output_file, 'wb')
+        resfile.write(''.join(fileContent))
+        resfile.close()
 
-            resfile = open(args.output_file, 'wb')
-            resfile.write(''.join(fileContent))
-            resfile.close()
-
-    else:  # стеганография в музыку
-        # модули Wave и Image устроены по-разному,
-        # поэтому и обращение несколько иное
-        if args.file_for_hiding:
-            try:
-                # считываем содержимое ифнормационного файла
-                inf = list(args.file_for_hiding.read())
-                args.file_for_hiding.close()
-                hidingToWav(args.input_file, inf, args.output_file)
-            except Exception as err:
-                print("Error: {0}".format(err))
-                return -1
-
-        else:
-            try:
-                fileContent = extractingFromWav(args.input_file)
-            except Exception as err:
-                print("Error: {0}".format(err))
-                return -1
-
-            resfile = open(args.output_file, 'wb')
-            resfile.write(''.join(fileContent))
-            resfile.close()
-
-
+    
 if __name__ == "__main__":
     main()

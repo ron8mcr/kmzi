@@ -298,7 +298,7 @@ def main():
         print("Error: {0}".format(err))
         return -1
 
-    funcs = {'c': coder.cryptList, 'd':coder.decryptList}
+    funcs = {'c': coder.cryptList, 'd': coder.decryptList}
     res = funcs[args.cryptOrDecrypt](args.inFile.read())
     args.outFile.write(''.join(res))
 
