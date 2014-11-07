@@ -26,16 +26,24 @@ def prepare_img(text, key_vizh, key_AES, img_cont_fname, res_img_fname):
     steg.hiding_to_image(img_cont_fname, crypted, res_img_fname)
 
 
-def send_data(data, host, port):
-    """отправка данных по сети"""
+def send_img(data, host, port):
+    """отправка изображения на сервер"""
     sock = socket.socket()
     try:
         sock.connect((host, port))
         sock.send(data)
-    except Exception as err:
-        print("Error: {0}".format(err))
 
-    sock.close()
+        # прочитаем имя, под которым отправленное изображение
+        # будет сохранено на сервере
+        fname = sock.recv(1024)
+    except Exception as err:
+        print("Error sending image: {0}".format(err))
+        return None
+
+    finally:
+        sock.close()
+
+    return fname
 
 
 def get_args():
@@ -72,7 +80,9 @@ def main():
     data_file.close()
     os.remove(fname)
 
-    send_data(data, args.ipAddr, 8090)
+    res_fname = send_img(data, args.ipAddr, 8090)
+    if res_fname:
+        print 'Image sent and saved as:', res_fname
 
 
 if __name__ == "__main__":

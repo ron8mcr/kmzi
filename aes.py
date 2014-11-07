@@ -4,7 +4,7 @@
 """КМЗИ. ЛР№2. AES."""
 
 
-class AESCoder:
+class AESCoder(object):
 
     """класс для шифрования и дешифрования AES
      при создании экземпляра класса необходимо указать,
@@ -216,7 +216,7 @@ class AESCoder:
             b >>= 1
         return p
 
-    def step_mix_columns(self, state, i, i1, i2, i3, i4):
+    def _step_mix_columns(self, state, i, i1, i2, i3, i4):
         """Для красоты методов _mix_columns и _inv_mix_columns"""
         return self._gmul(state[i][0], i1) ^ self._gmul(state[i][1], i2) ^ \
             self._gmul(state[i][2], i3) ^ self._gmul(state[i][3], i4)
@@ -230,10 +230,10 @@ class AESCoder:
         """
         for i in range(self.Nb):  # для всех столбцов таблицы
             b = [0] * 4
-            b[0] = self.step_mix_columns(state, i, 2, 3, 1, 1)
-            b[1] = self.step_mix_columns(state, i, 1, 2, 3, 1)
-            b[2] = self.step_mix_columns(state, i, 1, 1, 2, 3)
-            b[3] = self.step_mix_columns(state, i, 3, 1, 1, 2)
+            b[0] = self._step_mix_columns(state, i, 2, 3, 1, 1)
+            b[1] = self._step_mix_columns(state, i, 1, 2, 3, 1)
+            b[2] = self._step_mix_columns(state, i, 1, 1, 2, 3)
+            b[3] = self._step_mix_columns(state, i, 3, 1, 1, 2)
 
             for j in range(4):
                 state[i][j] = b[j]
@@ -242,10 +242,10 @@ class AESCoder:
     def _inv_mix_columns(self, state):
         for i in range(self.Nb):
             b = [0] * 4
-            b[0] = self.step_mix_columns(state, i, 14, 11, 13, 9)
-            b[1] = self.step_mix_columns(state, i, 9, 14, 11, 13)
-            b[2] = self.step_mix_columns(state, i, 13, 9, 14, 11)
-            b[3] = self.step_mix_columns(state, i, 11, 13, 9, 14)
+            b[0] = self._step_mix_columns(state, i, 14, 11, 13, 9)
+            b[1] = self._step_mix_columns(state, i, 9, 14, 11, 13)
+            b[2] = self._step_mix_columns(state, i, 13, 9, 14, 11)
+            b[3] = self._step_mix_columns(state, i, 11, 13, 9, 14)
 
             for j in range(4):
                 state[i][j] = b[j]
