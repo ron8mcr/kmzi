@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3
 
 """КМЗИ. ЛР№4. Клиент-серверное приложение,
 которое передает зашифрованное сообщение следующим образом:
@@ -22,8 +21,8 @@ import steg
 def prepare_img(text, key_vizh, key_AES, img_cont_fname, res_img_fname):
     """шифрование текста и сокрытие его в картинке"""
     text_vizh = vizh.vizh(text, key_vizh, vizh.crypt)
-    crypted = aes.AESCoder(key_AES).crypt_list(text_vizh)
-    steg.hiding_to_image(img_cont_fname, crypted, res_img_fname)
+    crypted = aes.AESCoder(key_AES).crypt_bytes(text_vizh)
+    steg.ImageSteg(img_cont_fname).hide(crypted, res_img_fname)
 
 
 def send_img(data, host, port):
@@ -71,7 +70,7 @@ def main():
         prepare_img(args.infFile.read(), args.keyVizh.read(),
                     args.keyAES.read(), args.imageFile, fname)
     except Exception as err:
-        print "Can't create image with hidden and ciphered file"
+        print("Can't create image with hidden and ciphered file")
         print("Error: {0}".format(err))
         return
 
@@ -82,7 +81,7 @@ def main():
 
     res_fname = send_img(data, args.ipAddr, 8090)
     if res_fname:
-        print 'Image sent and saved as:', res_fname
+        print ('Image sent and saved as {}'.format(res_fname.decode('UTF-8')))
 
 
 if __name__ == "__main__":

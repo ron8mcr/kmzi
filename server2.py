@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3
 
 """КМЗИ. ЛР№4. Клиент-серверное приложение,
                 которое передает зашифрованное сообщение следующим образом:
@@ -37,11 +36,11 @@ def main():
     args = get_args()
 
     try:
-        from_image = steg.extracting_from_image(args.imgFile)
+        from_image = steg.ImageSteg(args.imgFile).extract()
         coder_AES = aes.AESCoder(args.keyAES.read())
-        decrypted_AES = coder_AES.decrypt_list(from_image)
+        decrypted_AES = coder_AES.decrypt_bytes(from_image)
         res = vizh.vizh(decrypted_AES, args.keyVizh.read(), vizh.decrypt)
-        args.outFile.write(''.join(res))
+        args.outFile.write(res)
     except Exception as err:
         print ("Error: {0}".format(err))
         return

@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3
 
 """КМЗИ. ЛР№1. Шифр Вижинера"""
 
@@ -30,11 +29,15 @@ def decrypt(i, k):
 
 
 def vizh(input_, key, func):
+    assert isinstance(input_, bytearray) or isinstance(input_, bytes), \
+        'Input type is not bytes'
+    assert isinstance(key, bytearray) or isinstance(key, bytes), \
+        'Key type is not bytes'
     key_len = len(key)
     if key_len == 0:
         raise Exception('Vizhiner key is empty')
-    return [chr(func(ord(s), ord(key[i % key_len])) % 256)
-            for i, s in enumerate(input_)]
+    return bytearray([func(s, key[i % key_len] + 256) % 256
+                      for i, s in enumerate(input_)])
 
 
 def main():
@@ -47,7 +50,7 @@ def main():
         print("Error: {0}".format(err))
         return
 
-    args.outFile.write(''.join(res))
+    args.outFile.write(res)
 
 
 if __name__ == "__main__":

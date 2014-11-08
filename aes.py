@@ -1,10 +1,9 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3
 
 """КМЗИ. ЛР№2. AES."""
 
 
-class AESCoder(object):
+class AESCoder:
 
     """класс для шифрования и дешифрования AES
      при создании экземпляра класса необходимо указать,
@@ -16,12 +15,14 @@ class AESCoder(object):
         дабы не морочиться с различной длинной ключей,
         будем рассматривать случай, когда ключ 128 байт
         """
+        assert isinstance(key, bytearray) or isinstance(key, bytes), \
+            'Key type is not bytes'
         if len(key) != 16:
             raise Exception('Wrong key size, must be 16 bytes!')
         self.Nk = 4  # число 32-х битных слов, составляющих шифроключ
         self.Nb = 4  # число столбцов(32-х битных слов), составляющих State
         self.Nr = 10  # число раундов, которое является функцией Nk и Nb
-        self.w = self._key_expansion([ord(x) for x in key])
+        self.w = self._key_expansion(key)
 
     def _key_expansion(self, key):
         """ получение ключей для всех раундов """
@@ -51,7 +52,7 @@ class AESCoder(object):
             temp = w[i - 1]
             if i % self.Nk == 0:
                 temp = self._sub_word(self._rot_word(temp))
-                temp = [temp[j] ^ r_con[i / self.Nk][j] for j in range(4)]
+                temp = [temp[j] ^ r_con[i // self.Nk][j] for j in range(4)]
             w[i] = [temp[j] ^ w[i - self.Nk][j] for j in range(4)]
         return w
 
@@ -78,8 +79,8 @@ class AESCoder(object):
         state = self._add_round_key(
             state, self.w[self.Nr * self.Nb:(self.Nr + 1) * self.Nb])
 
-        # собираем state в список
-        result = []
+        # собираем state в массив
+        result = bytearray()
         for i in range(self.Nb):
             for j in range(4):
                 result.append(state[j][i])
@@ -103,8 +104,7 @@ class AESCoder(object):
         state = self._inv_sub_bytes(state)
         state = self._add_round_key(state, self.w[0: self.Nb])
 
-        # собираем state в список
-        result = []
+        result = bytearray()
         for i in range(self.Nb):
             for j in range(4):
                 result.append(state[j][i])
@@ -251,35 +251,30 @@ class AESCoder(object):
                 state[i][j] = b[j]
         return state
 
-    def crypt_list(self, input_):
-        """шифрование input
-        на выходе - зашифрованные данные (список байт) и количество
-        нулевых байт, вставленных для выравнивания длинны
-        (кратной 16 байтам (128 битам))
-        """
-        # первым делом переведём символы (байты) в int
-        input_ = [ord(x) for x in input_]
-
-        output = []
-        for i in range(len(input_) / 16):
+    def crypt_bytes(self, input_):
+        """шифрование байтов input_  """
+        input_ = bytearray(input_)
+        output = bytearray()
+        for i in range(len(input_) // 16):
             output += self._crypt(input_[i * 16: (i + 1) * 16])
 
         last_len = len(input_) % 16
         n_zeroes = 16 - last_len
-        last_part = input_[-last_len::] + [0] * n_zeroes
+        last_part = input_[-last_len::] + bytearray([0] * n_zeroes)
         output += self._crypt(last_part)
-        return [chr(n_zeroes)] + [chr(x) for x in output]
+        return bytearray([n_zeroes]) + output
 
-    def decrypt_list(self, input_):
-        n_zeroes = ord(input_[0])
-        input_ = [ord(x) for x in input_[1:]]
+    def decrypt_bytes(self, input_):
+        input_ = bytearray(input_)
+        n_zeroes = input_[0]
+        input_ = input_[1:]
 
-        output = []
-        for i in range(len(input_) / 16):
+        output = bytearray()
+        for i in range(len(input_) // 16):
             output += self._decrypt(input_[i * 16: (i + 1) * 16])
 
         output = output[:-n_zeroes]  # избавимся от фиктивных нулей в конце
-        return [chr(x) for x in output]
+        return output
 
 
 def get_args():
@@ -309,9 +304,9 @@ def main():
         print("Error: {0}".format(err))
         return -1
 
-    funcs = {'c': coder.crypt_list, 'd': coder.decrypt_list}
+    funcs = {'c': coder.crypt_bytes, 'd': coder.decrypt_bytes}
     res = funcs[args.cryptOrDecrypt](args.inFile.read())
-    args.outFile.write(''.join(res))
+    args.outFile.write(res)
 
 
 if __name__ == "__main__":
